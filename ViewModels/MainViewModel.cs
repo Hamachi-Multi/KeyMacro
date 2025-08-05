@@ -57,6 +57,7 @@ namespace SimpleKeyMacro.ViewModels
         }
 
         private CancellationTokenSource? _cancellationTokenSource;
+        private CancellationTokenSource? _delayChangeTokenSource;
         
         [ObservableProperty]
         private string keyStrokeText = "Right";
@@ -71,6 +72,10 @@ namespace SimpleKeyMacro.ViewModels
                 if (value > 0)
                 {
                     SetProperty(ref _delaySeconds, value);
+                    if (IsRunning)
+                    {
+                        _delayChangeTokenSource?.Cancel();
+                    }
                 }
             }
         }
@@ -107,13 +112,29 @@ namespace SimpleKeyMacro.ViewModels
             _cancellationTokenSource = new CancellationTokenSource();
             var token = _cancellationTokenSource.Token;
 
+            _delayChangeTokenSource = new CancellationTokenSource();
+
             Task.Run(async () =>
             {
                 while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        await Task.Delay((int)(DelaySeconds * 1000), token);
+                        var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(token, _delayChangeTokenSource.Token);
+                        try
+                        {
+                            await Task.Delay((int)(DelaySeconds * 1000), linkedCts.Token);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            if (token.IsCancellationRequested)
+                            {
+                                break;
+                            }
+                            _delayChangeTokenSource.Dispose();
+                            _delayChangeTokenSource = new CancellationTokenSource();
+                            continue;
+                        }
 
                         if (!string.IsNullOrEmpty(KeyStrokeText))
                         {
@@ -164,6 +185,8 @@ namespace SimpleKeyMacro.ViewModels
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource = null;
+            _delayChangeTokenSource?.Cancel();
+            _delayChangeTokenSource = null;
             IsRunning = false;
             Debug.WriteLine("Macro stopped");
         }
@@ -181,6 +204,8 @@ namespace SimpleKeyMacro.ViewModels
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
+            _delayChangeTokenSource?.Cancel();
+            _delayChangeTokenSource?.Dispose();
         }
     }
 }
