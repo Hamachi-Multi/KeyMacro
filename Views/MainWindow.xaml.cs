@@ -11,6 +11,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Gma.System.MouseKeyHook;
 using SimpleKeyMacro.Services;
+using System.Diagnostics;
 
 namespace SimpleKeyMacro.Views
 {
@@ -30,10 +31,11 @@ namespace SimpleKeyMacro.Views
             if (DataContext is MainViewModel viewModel)
             {
                 string pressedKey = e.Key.ToString();
-
+                Debug.WriteLine($"Key pressed: {pressedKey}");
                 viewModel.KeyStrokeText = pressedKey;
             }
 
+            FocusableTextBox.Focus();
             e.Handled = true;
         }
 

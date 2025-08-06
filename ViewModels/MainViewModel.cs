@@ -178,7 +178,9 @@ namespace SimpleKeyMacro.ViewModels
             { "Space", VirtualKeyCode.SPACE },
             { "Enter", VirtualKeyCode.RETURN },
             { "Backspace", VirtualKeyCode.BACK },
-            { "Tab", VirtualKeyCode.TAB }
+            { "Tab", VirtualKeyCode.TAB },
+            { "Left", VirtualKeyCode.LEFT },
+            { "Right", VirtualKeyCode.RIGHT }
         };
 
         private void StopMacro()
